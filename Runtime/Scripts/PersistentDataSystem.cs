@@ -213,7 +213,8 @@ namespace FredericRP.PersistentData
       {
         Assembly requiredAssembly = Assembly.Load(assemblyName);
         return requiredAssembly?.GetType(typeName);
-      } catch(Exception) { }
+      }
+      catch (Exception) { }
       return null;
     }
 
@@ -330,7 +331,7 @@ namespace FredericRP.PersistentData
         else
           dataPath += AutomaticSerializationFileExtension;
 
-        Debug.Log("Loading " + dataPath);
+        //Debug.Log("Loading " + dataPath);
         savedData = LoadSavedData(dataPath, 0, saveType == SaveType.Default);
 
         if (savedData == null)
@@ -604,7 +605,7 @@ namespace FredericRP.PersistentData
       if (savedData is SavedData.IFullSerializationControl)
       {
         dataPath += ControlledSerializationFileExtension;
-        Debug.Log("Saving " + dataPath);
+        //Debug.Log("Saving " + dataPath);
         using (FileStream fs = File.Create(dataPath))
         {
           BinaryWriter writer = new BinaryWriter(fs);
@@ -619,13 +620,13 @@ namespace FredericRP.PersistentData
       {
         dataPath += AutomaticSerializationFileExtension;
         BinaryFormatter bf = new BinaryFormatter();
-        Debug.Log("Serializing " + dataPath);
+        //Debug.Log("Serializing " + dataPath);
         using (FileStream fs = File.Create(dataPath))
         {
           bf.Serialize(fs, savedData);
           fs.Close();
         }
-        Debug.Log("Done serializing " + dataPath);
+        //Debug.Log("Done serializing " + dataPath);
       }
 
       savedData.filePath = dataPath;
@@ -852,15 +853,7 @@ namespace FredericRP.PersistentData
       if (paused && savedDataList != null)
       {
         SaveAllData();
-
-#if UNITY_EDITOR
-        Debug.LogWarning("Data Save On Pause By AUTO_SAVE_MANAGEMENT");
-#endif
       }
-#if UNITY_EDITOR
-      else
-        Debug.LogWarning("Data Not Save On Pause By AUTO_SAVE_MANAGEMENT");
-#endif
     }
 
     public override void OnApplicationQuit()
@@ -869,17 +862,8 @@ namespace FredericRP.PersistentData
       {
         SaveAllData();
 
-#if UNITY_EDITOR
-        Debug.LogWarning("Data Saved On Application Quit By AUTO_SAVE_MANAGEMENT");
-#endif
         // Clear serialized data
         savedDataList?.Clear();
-      }
-      else
-      {
-#if UNITY_EDITOR
-        Debug.LogWarning("Data Not Saved On Application Quit due to null data By AUTO_SAVE_MANAGEMENT");
-#endif
       }
     }
   }
