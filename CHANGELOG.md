@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
 
+## [1.0.0] - 2021-10-12
+
 ### Fixed
 - Find and load the correct assembly for the children of SavedData classes to load
 - Editor assembly restricted to Editor platform

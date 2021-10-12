@@ -1,11 +1,11 @@
-﻿using UnityEngine;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.IO;
-using System.Collections.Generic;
-using System;
+﻿using FredericRP.GenericSingleton;
 using FredericRP.StringDataList;
-using FredericRP.GenericSingleton;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
+using UnityEngine;
 
 namespace FredericRP.PersistentData
 {
@@ -121,7 +121,7 @@ namespace FredericRP.PersistentData
 
       switch (awakeLoadMode)
       {
-        case AwakeLoadMode.SpecificClass: LoadClass(this.classToLoad); break;
+        case AwakeLoadMode.SpecificClass: LoadSpecificClass(); break;
         case AwakeLoadMode.AllSavedData: LoadAllSavedData(); break;
         default: break;
       }
@@ -152,6 +152,14 @@ namespace FredericRP.PersistentData
 
       if (savedDataList != null)
         savedDataList.Clear();
+    }
+
+    /// <summary>
+    /// Load the specified classes
+    /// </summary>
+    public void LoadSpecificClass()
+    {
+      LoadClass(this.classToLoad);
     }
 
     /// <summary>
