@@ -46,7 +46,7 @@ namespace FredericRP.PersistentData
     public string dataVersion;
 
     /// <summary>
-    /// Function called when OnDatacreated is call by persistentData.
+    /// Function called when OnDataCreated is call by persistentData.
     /// This is called when no data is detected in default saved data or in player saved data.
     /// </summary>
     /// <param name="dataVersion"></param>
@@ -62,5 +62,10 @@ namespace FredericRP.PersistentData
     /// </summary>
     /// <param name="dataVersion"></param>
     public virtual void onChangeDataVersion(string dataVersion) { }
+
+    /// <summary>
+    /// Called when the data has been loaded for the player
+    /// </summary>
+    public virtual void onPlayerDataLoaded() { }
   }
 }

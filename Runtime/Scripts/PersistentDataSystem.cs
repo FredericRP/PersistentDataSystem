@@ -348,6 +348,8 @@ namespace FredericRP.PersistentData
         }
         else if (saveType == SaveType.Default)
           savedData.onDefaultDataLoaded();
+        else
+          savedData.onPlayerDataLoaded();
       }
       catch
       {
