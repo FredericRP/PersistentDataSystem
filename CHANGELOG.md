@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
 
+## [1.0.4] - 2022-05-24
+
+### Fixed
+- Removed default data list in package folder so it can be updated in the right folder by Unity
+
 ## [1.0.3] - 2022-05-24
 
 ### Added
