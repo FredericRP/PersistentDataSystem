@@ -1,6 +1,6 @@
 {
     "name": "com.fredericrp.persistentdatasystem",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "displayName": "FRP Persistent Data System",
     "description": "The PersistentDataSystem is a fast and maintenable save system. Data are written in binary files to hide the content from users and to enable fast loading and saving.",
     "unity": "2020.1",

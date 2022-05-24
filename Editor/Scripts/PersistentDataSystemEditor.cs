@@ -91,16 +91,11 @@ namespace FredericRP.PersistentData
     /// </summary>
     public static void UpdateSpecificClassList<T>(MonoScript source, string dataListFilename)
     {
-      string dataPath;      
-      dataPath = AssetDatabase.GetAssetPath(source);
-
-      FileInfo fi = new FileInfo(dataPath);
-      // Get parent, then add Resources/datafile/pds-specific-class.txt to get the correct data path
-      string dataDirectory = fi.Directory.Parent.ToString().Replace('\\', '/') + "/Resources/datalist";
+      string dataDirectory = Application.dataPath + "/Resources/datalist";
       // ensure directory exists
       if (!File.Exists(dataDirectory))
         Directory.CreateDirectory(dataDirectory);
-      dataPath = dataDirectory + "/" + dataListFilename;
+      string dataPath = dataDirectory + "/" + dataListFilename;
 
       using (FileStream fs = File.Create(dataPath))
       {
@@ -117,12 +112,18 @@ namespace FredericRP.PersistentData
         writer.Close();
         fs.Close();
       }
+
       mustCheckList = false;
     }
 
     void SpecificClassEditor(PersistentDataSystem persistentDataSystem)
     {
-      SerializedProperty classToLoad = serializedObject.FindProperty("classToLoad");
+      if (GUILayout.Button("Refresh"))
+      {
+        MonoScript ms = MonoScript.FromScriptableObject(this);
+        UpdateSpecificClassList<SavedData>(ms, PersistentDataSystem.SpecificClassListDataFilename + ".txt");
+      }
+      SerializedProperty classToLoad = serializedObject.FindProperty("specificClassList");
       EditorGUILayout.PropertyField(classToLoad, new GUIContent("Specific classes"));
     }
 
@@ -138,7 +139,7 @@ namespace FredericRP.PersistentData
     void LoadCurrentSaveType(PersistentDataSystem persistentDataSystem)
     {
       if (persistentDataSystem.awakeLoadMode == PersistentDataSystem.AwakeLoadMode.SpecificClass)
-        persistentDataSystem.LoadClass(persistentDataSystem.classToLoad, currentSaveType);
+        persistentDataSystem.LoadFromClassList(persistentDataSystem.specificClassList, currentSaveType);
       else
         persistentDataSystem.LoadAllSavedData(currentSaveType);
     }

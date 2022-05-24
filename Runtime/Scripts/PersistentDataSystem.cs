@@ -78,7 +78,7 @@ namespace FredericRP.PersistentData
 
     [Tooltip("Classes to load at the start of the game")]
     [Select(SpecificClassListDataFilename)]
-    public List<string> classToLoad;
+    public List<string> specificClassList;
 
     [SerializeReference]
     public List<SavedData> savedDataList = new List<SavedData>();
@@ -147,8 +147,8 @@ namespace FredericRP.PersistentData
       OnDataSaved = null;
       OnDataLoaded = null;
 
-      if (classToLoad != null)
-        classToLoad.Clear();
+      if (specificClassList != null)
+        specificClassList.Clear();
 
       if (savedDataList != null)
         savedDataList.Clear();
@@ -159,18 +159,19 @@ namespace FredericRP.PersistentData
     /// </summary>
     public void LoadSpecificClass()
     {
-      LoadClass(this.classToLoad);
+      LoadFromClassList(this.specificClassList);
     }
 
     /// <summary>
     /// Create new instance of class and load it with the LoadSavedData function. Independent of multiple files or not.
     /// Will "destroy" all previous loaded data from persistentData dictionnary
     /// </summary>
-    /// <param name="classToLoad"></param>
+    /// <param name="classToLoad">list of classes that implement <cref>SavedData</cref> to load</param>
     /// <param name="saveType">if defined on LoadMode.Default, it will load default saved data in the persistentData folder</param>
     /// <returns></returns>
-    public bool LoadClass(List<string> classToLoad, SaveType saveType = SaveType.Player)
+    public bool LoadFromClassList(List<string> classToLoad, SaveType saveType = SaveType.Player)
     {
+      Debug.Log("LoadClass " + classToLoad);
       if (classToLoad == null)
       {
         Debug.LogError("Class empty : can not load data");
@@ -190,14 +191,23 @@ namespace FredericRP.PersistentData
           Type type = Type.GetType(typeName);
           if (type == null)
           {
-            string assemblyName = typeName.Substring(0, typeName.LastIndexOf('.'));
-            // Use qualified name to retrieve assembly name and load it
-            type = TryLoadType(assemblyName, typeName);
-            // but with unity packages, it can fail to load it, try "sub" assemblies instead: Runtime and Editor
-            if (type == null)
-              type = TryLoadType(assemblyName + ".Runtime", typeName);
-            if (type == null)
-              type = TryLoadType(assemblyName + ".Editor", typeName);
+            int length = typeName.LastIndexOf('.');
+            if (length > 0)
+            {
+              string assemblyName = typeName.Substring(0, length);
+              // Use qualified name to retrieve assembly name and load it
+              type = TryLoadType(assemblyName, typeName);
+              // but with unity packages, it can fail to load it, try "sub" assemblies instead: Runtime and Editor
+              if (type == null)
+                type = TryLoadType(assemblyName + ".Runtime", typeName);
+              if (type == null)
+                type = TryLoadType(assemblyName + ".Editor", typeName);
+            }
+            else
+            {
+              // No namespace, try default one
+              type = TryLoadType("Assembly-CSharp", typeName);
+            }
           }
           if (type != null)
             LoadSavedData(type, saveType);
@@ -339,7 +349,7 @@ namespace FredericRP.PersistentData
         else
           dataPath += AutomaticSerializationFileExtension;
 
-        //Debug.Log("Loading " + dataPath);
+        Debug.Log("Loading " + dataPath);
         savedData = LoadSavedData(dataPath, 0, saveType == SaveType.Default);
 
         if (savedData == null)
@@ -347,9 +357,9 @@ namespace FredericRP.PersistentData
           throw new System.ArgumentException("No data of this type or incompatible version");
         }
         else if (saveType == SaveType.Default)
-          savedData.onDefaultDataLoaded();
-        else
-          savedData.onPlayerDataLoaded();
+            savedData.onDefaultDataLoaded();
+          else
+            savedData.onPlayerDataLoaded();
       }
       catch
       {
@@ -358,8 +368,8 @@ namespace FredericRP.PersistentData
         if (saveType == SaveType.Player)
           return LoadSavedData(type, SaveType.Default);
 
-        //savedData = (SavedData)ScriptableObject.CreateInstance(type);
         savedData = (SavedData)Activator.CreateInstance(type);
+        savedData.dataName = type.FullName;
         savedData.dataVersion = dataVersion;
         savedData.onDataCreated(dataVersion);
 
@@ -610,12 +620,13 @@ namespace FredericRP.PersistentData
       if (!Directory.Exists(dataPath))
         Directory.CreateDirectory(dataPath);
 
-      dataPath += "/" + type.Name;// cpt;
+      dataPath += "/" + type.Name;
 
       if (savedData is SavedData.IFullSerializationControl)
       {
         dataPath += ControlledSerializationFileExtension;
         //Debug.Log("Saving " + dataPath);
+        // TODO: implement backup system (create new file, then rename if write process is ok)
         using (FileStream fs = File.Create(dataPath))
         {
           BinaryWriter writer = new BinaryWriter(fs);
@@ -629,13 +640,25 @@ namespace FredericRP.PersistentData
       else
       {
         dataPath += AutomaticSerializationFileExtension;
+        string dataPathBak = dataPath + ".bak";
+        if (File.Exists(dataPath))
+        {
+          if (File.Exists(dataPathBak))
+            File.Delete(dataPathBak);
+          File.Move(dataPath, dataPathBak);
+        }
         BinaryFormatter bf = new BinaryFormatter();
+        // TODO: implement backup system (create new file, then rename if write process is ok)
         //Debug.Log("Serializing " + dataPath);
         using (FileStream fs = File.Create(dataPath))
         {
           bf.Serialize(fs, savedData);
           fs.Close();
         }
+        // Keep backup file in editor for debug purpose
+#if !UNITY_EDITOR
+        File.Delete(dataPathBak);
+#endif
         //Debug.Log("Done serializing " + dataPath);
       }
 
@@ -856,7 +879,6 @@ namespace FredericRP.PersistentData
 
     public void OnApplicationPause(bool paused)
     {
-
       if (!autoSave)
         return;
 
@@ -868,6 +890,8 @@ namespace FredericRP.PersistentData
 
     public override void OnApplicationQuit()
     {
+      // Prevent file issue when exiting play mode in editor
+#if !UNITY_EDITOR
       if (autoSave && savedDataList != null)
       {
         SaveAllData();
@@ -875,6 +899,7 @@ namespace FredericRP.PersistentData
         // Clear serialized data
         savedDataList?.Clear();
       }
+#endif
     }
   }
 }
