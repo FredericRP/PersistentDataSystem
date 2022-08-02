@@ -188,31 +188,33 @@ namespace FredericRP.PersistentData
       {
         foreach (string typeName in classToLoad)
         {
+          // Try global load
           Type type = Type.GetType(typeName);
           if (type == null)
           {
-            int length = typeName.LastIndexOf('.');
-            if (length > 0)
+            // If not found, try default assembly one
+            type = TryLoadType("Assembly-CSharp", typeName);
+            if (type == null)
             {
-              string assemblyName = typeName.Substring(0, length);
-              // Use qualified name to retrieve assembly name and load it
-              type = TryLoadType(assemblyName, typeName);
-              // but with unity packages, it can fail to load it, try "sub" assemblies instead: Runtime and Editor
-              if (type == null)
-                type = TryLoadType(assemblyName + ".Runtime", typeName);
-              if (type == null)
-                type = TryLoadType(assemblyName + ".Editor", typeName);
-            }
-            else
-            {
-              // No namespace, try default one
-              type = TryLoadType("Assembly-CSharp", typeName);
+              // If not found, try to find automatically the assembly from package name
+              int length = typeName.LastIndexOf('.');
+              if (length > 0)
+              {
+                string assemblyName = typeName.Substring(0, length);
+                // Use qualified name to retrieve assembly name and load it
+                type = TryLoadType(assemblyName, typeName);
+                // but with unity packages, it can fail to load it, try "sub" assemblies instead: Runtime and Editor
+                if (type == null)
+                  type = TryLoadType(assemblyName + ".Runtime", typeName);
+                if (type == null)
+                  type = TryLoadType(assemblyName + ".Editor", typeName);
+              }
             }
           }
           if (type != null)
             LoadSavedData(type, saveType);
           else
-            Debug.Log("LoadSavedData > " + type + " from " + typeName);
+            Debug.Log("Can not load SavedData [" + type + "] from " + typeName);
         }
       }
 
@@ -357,9 +359,9 @@ namespace FredericRP.PersistentData
           throw new System.ArgumentException("No data of this type or incompatible version");
         }
         else if (saveType == SaveType.Default)
-            savedData.onDefaultDataLoaded();
-          else
-            savedData.onPlayerDataLoaded();
+          savedData.onDefaultDataLoaded();
+        else
+          savedData.onPlayerDataLoaded();
       }
       catch
       {

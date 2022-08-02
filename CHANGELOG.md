@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
 
+## [1.0.5] - 2022-08-02
+
+### Fixed
+- Try to load from default Unity assembly if not found by default, not after trying assemblies from package name
+
 ## [1.0.4] - 2022-05-24
 
 ### Fixed
